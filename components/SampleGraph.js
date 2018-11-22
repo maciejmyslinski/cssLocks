@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
+import system from 'system-components';
 
 import 'd3';
 import functionPlot from 'function-plot';
+import { Code } from './Code';
 
 const DEFAULT_WIDTH = 550;
 const DEFAULT_HEIGHT = 350;
@@ -11,9 +13,24 @@ const dimensions = ({ width }) => ({
   height: autoHeight(width),
 });
 
-export class SampleGraph extends Component {
-  el = React.createRef();
+const Wrapper = system({
+  height: '100vh',
+  width: '100vw',
+  display: 'grid',
+  gridTemplateAreas: '"controls graph" "code graph"',
+  gridTemplateColumns: '1fr 900px',
+});
+const Controls = system({
+  gridArea: 'controls',
+});
 
+const Graph = system({
+  gridArea: 'graph',
+  justifySelf: 'end',
+  alignSelf: 'center',
+});
+
+export class SampleGraph extends Component {
   state = {
     m: 0.03,
     minWidth: 320,
@@ -33,7 +50,10 @@ export class SampleGraph extends Component {
     if (b === '') return;
     this.plotInstance = functionPlot(
       this.generateFunctionPlotOptions({
-        m, minWidth, maxWidth, b,
+        m,
+        minWidth,
+        maxWidth,
+        b,
       }),
     );
   }
@@ -48,7 +68,10 @@ export class SampleGraph extends Component {
     if (b === '') return;
     this.plotInstance = functionPlot(
       this.generateFunctionPlotOptions({
-        m, minWidth, maxWidth, b,
+        m,
+        minWidth,
+        maxWidth,
+        b,
       }),
     );
   }
@@ -95,29 +118,33 @@ export class SampleGraph extends Component {
       m, minWidth, maxWidth, b,
     } = this.state;
     return (
-      <React.Fragment>
-        <label>
-          minWidth:
-          <input value={minWidth} onChange={this.handleInputChange('minWidth')} />
-        </label>
+      <Wrapper>
+        <Controls>
+          <label>
+            minWidth:
+            <input value={minWidth} onChange={this.handleInputChange('minWidth')} />
+          </label>
 
-        <label>
-          maxWidth:
-          <input value={maxWidth} onChange={this.handleInputChange('maxWidth')} />
-        </label>
+          <label>
+            maxWidth:
+            <input value={maxWidth} onChange={this.handleInputChange('maxWidth')} />
+          </label>
 
-        <label>
-          m:
-          <input value={m} onChange={this.handleInputChange('m')} />
-        </label>
-        <div id="abc" ref={this.el} />
+          <label>
+            m:
+            <input value={m} onChange={this.handleInputChange('m')} />
+          </label>
 
-        <label>
-          b:
-          <input value={b} onChange={this.handleInputChange('b')} />
-        </label>
-        <div id="abc" ref={this.el} />
-      </React.Fragment>
+          <label>
+            b:
+            <input value={b} onChange={this.handleInputChange('b')} />
+          </label>
+        </Controls>
+        <Code language="scss" code="font-size: 16px;" />
+        <Graph>
+          <div id="abc" />
+        </Graph>
+      </Wrapper>
     );
   }
 }
