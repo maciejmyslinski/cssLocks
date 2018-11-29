@@ -6,6 +6,7 @@ module.exports = {
     browser: true,
   },
   rules: {
+    'max-len': ['error', { code: 120 }],
     'react/jsx-filename-extension': ['error', { extensions: ['.js'] }],
     'react/require-default-props': 'off',
     'react/no-multi-comp': 'off',

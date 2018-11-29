@@ -12,7 +12,7 @@ export const SettingsForm = ({ values: { mediaQueryUnits, fontSizeUnits, browser
   const onePxInRem = 1 / browserFontSize;
   const mediaQueryMin = mediaQueryUnits === 'px' ? '320' : '1';
   const mediaQueryMax = mediaQueryUnits === 'px' ? '1200' : '100';
-  const fontSizeMax = fontSizeUnits === 'px' ? '50' : String(50 / browserFontSize);
+  const fontSizeMax = fontSizeUnits === 'px' ? '50' : String(50 / 16);
   const fontSizeStep = fontSizeUnits === 'px' ? '1' : String(onePxInRem);
   return (
     <React.Fragment>
