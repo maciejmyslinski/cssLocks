@@ -14,5 +14,15 @@ module.exports = {
     'react/prefer-stateless-function': 'off',
     'import/prefer-default-export': 'off',
     'import/no-extraneous-dependencies': 'off',
+    'jsx-a11y/label-has-for': 'off',
+    'jsx-a11y/accessible-emoji': 'off',
+    'jsx-a11y/label-has-associated-control': [
+      'error',
+      {
+        labelComponents: ['Label'],
+        controlComponents: ['Field'],
+        depth: 3,
+      },
+    ],
   },
 };
