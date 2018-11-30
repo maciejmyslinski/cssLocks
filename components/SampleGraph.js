@@ -114,7 +114,7 @@ const Wrapper = system({
   width: '100vw',
   display: 'grid',
   gridTemplateAreas: '"controls graph" "code graph"',
-  gridTemplateColumns: '1fr 900px',
+  gridTemplateColumns: '50% 900px',
 });
 const Controls = system({
   gridArea: 'controls',
@@ -169,10 +169,10 @@ const generateFunctionPlotOptions = ({
   mediaQueryUnits,
   maxBreakpoint,
   fontSizeUnits,
+  equation,
 }) => {
-  // const minFontSizeInPx = calculateMinFontSizeInPx({ fontSizeUnits, minFontSize, browserFontSize });
   const minFontSizeInPx = emToPx({ value: minFontSize, units: fontSizeUnits, browserFontSize });
-  const maxFontSizeInPx = calculateMaxFontSizeInPx({ fontSizeUnits, maxFontSize, browserFontSize });
+  let maxFontSizeInPx = calculateMaxFontSizeInPx({ fontSizeUnits, maxFontSize, browserFontSize });
   const minBreakpointInPx = calculateMinBreakpointInPx({ mediaQueryUnits, minBreakpoint, browserFontSize });
   const maxBreakpointInPx = calculateMaxBreakpointInPx({ mediaQueryUnits, maxBreakpoint, browserFontSize });
   const m = calculateM({
@@ -191,87 +191,107 @@ const generateFunctionPlotOptions = ({
     fontSizeUnits,
     mediaQueryUnits,
   });
+  const bInRem = b / browserFontSize;
+  const formattedB = fontSizeUnits === 'px' ? `${b}${fontSizeUnits}` : `${bInRem}${fontSizeUnits}`;
+  let baselineInPx;
+  let fn = `${m} * x + ${b}`;
+  let formattedFn = 'm * x + b';
+  let formattedMaxFn = `${maxFontSize}${fontSizeUnits}`;
+  let b2;
+  let formattedVariables = `// m = ${m}
+    // b = ${formattedB}`;
+
+  if (equation === 'remFontSize') {
+    const bWithDefaultFontSize = calculateB({
+      m,
+      minBreakpoint,
+      minFontSize,
+      browserFontSize: 16,
+      fontSizeUnits,
+      mediaQueryUnits,
+    });
+    const baselineWithDefaultFontSize = emToPx({ value: minFontSize, units: fontSizeUnits, browserFontSize: 16 });
+    baselineInPx = emToPx({ value: minFontSize, units: fontSizeUnits, browserFontSize });
+
+    b2 = bWithDefaultFontSize - baselineWithDefaultFontSize;
+    fn = `${baselineInPx} + ${m} * x + ${b2}`;
+    formattedFn = 'baseline + m * x + b2';
+    const maxFontSizeWithDefaultFontSizeInPx = emToPx({
+      value: maxFontSize,
+      units: fontSizeUnits,
+      browserFontSize: 16,
+    });
+    maxFontSizeInPx = baselineInPx + maxFontSizeWithDefaultFontSizeInPx - baselineWithDefaultFontSize;
+    const fontDiffInPx = maxFontSizeInPx - minFontSizeInPx;
+    formattedMaxFn = `${minFontSize}rem + ${fontDiffInPx}px`;
+    formattedVariables = `// baseline = ${minFontSize}rem
+    // b2 = ${b2}px`;
+  }
 
   return {
-    target: '#abc',
-    grid: true,
-    ...dimensions({ width: 900 }),
-    xAxis: {
-      label: 'viewport width',
-      domain: [0, 1280],
+    formattedFn,
+    formattedMaxFn,
+    formattedVariables,
+    config: {
+      target: '#abc',
+      grid: true,
+      ...dimensions({ width: 900 }),
+      xAxis: {
+        label: 'viewport width',
+        domain: [0, 1280],
+      },
+      yAxis: {
+        label: 'font-size',
+        domain: [0, 65],
+      },
+      data: [
+        {
+          fn: String(minFontSizeInPx),
+          range: [0, minBreakpointInPx],
+        },
+        {
+          fn,
+          range: [minBreakpointInPx, maxBreakpointInPx],
+        },
+        {
+          fn: String(maxFontSizeInPx),
+          range: [maxBreakpointInPx, 1280],
+        },
+      ],
     },
-    yAxis: {
-      label: 'font-size',
-      domain: [0, 65],
-    },
-    data: [
-      {
-        fn: String(minFontSizeInPx),
-        range: [0, minBreakpointInPx],
-      },
-      {
-        fn: `${m} * x + ${b}`,
-        range: [minBreakpointInPx, maxBreakpointInPx],
-      },
-      {
-        fn: String(maxFontSizeInPx),
-        range: [maxBreakpointInPx, 1280],
-      },
-    ],
   };
 };
 
-const generateCode = ({
-  browserFontSize,
-  minFontSize,
-  maxFontSize,
-  minBreakpoint,
-  mediaQueryUnits,
-  maxBreakpoint,
-  fontSizeUnits,
-}) => {
-  const minFontSizeInPx = calculateMinFontSizeInPx({ fontSizeUnits, minFontSize, browserFontSize });
-  const maxFontSizeInPx = calculateMaxFontSizeInPx({ fontSizeUnits, maxFontSize, browserFontSize });
-  const minBreakpointInPx = calculateMinBreakpointInPx({ mediaQueryUnits, minBreakpoint, browserFontSize });
-  const maxBreakpointInPx = calculateMaxBreakpointInPx({ mediaQueryUnits, maxBreakpoint, browserFontSize });
-  const m = calculateM({
-    minFontSize,
-    maxFontSize,
-    minBreakpoint,
-    maxBreakpoint,
-    mediaQueryUnits,
-    fontSizeUnits,
-  });
-  const bInPx = calculateB({
-    m,
-    minBreakpoint,
-    minFontSize,
+const generateCode = (values) => {
+  const {
     browserFontSize,
-    fontSizeUnits,
+    minFontSize,
+    minBreakpoint,
     mediaQueryUnits,
-  });
-  const bInRem = bInPx / browserFontSize;
-  const formattedB = fontSizeUnits === 'px' ? `${bInPx}${fontSizeUnits}` : `${bInRem}${fontSizeUnits}`
-  return `// 1rem === ${browserFontSize}px
+    maxBreakpoint,
+    fontSizeUnits,
+  } = values;
+
+  const { formattedFn, formattedVariables, formattedMaxFn } = generateFunctionPlotOptions(values);
+  return `// 1rem = ${browserFontSize}px
 
 p {
   font-size: ${minFontSize}${fontSizeUnits};
 
   @media (min-width: ${minBreakpoint}${mediaQueryUnits}) {
-    font-size: calc(m * x + b);
-    // m === ${m}
-    // b === ${formattedB}
+    font-size: calc(${formattedFn});
+    ${formattedVariables}
   }
 
   @media (min-width: ${maxBreakpoint}${mediaQueryUnits}) {
-    font-size: ${maxFontSize}${fontSizeUnits};
+    font-size: ${formattedMaxFn};
   }
 }
   `;
 };
 
 const rerenderGraph = (values) => {
-  const options = generateFunctionPlotOptions(values);
+  const options = generateFunctionPlotOptions(values).config;
   functionPlot(options);
 };
 

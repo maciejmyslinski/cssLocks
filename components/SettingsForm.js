@@ -19,7 +19,8 @@ export const SettingsForm = ({ values: { mediaQueryUnits, fontSizeUnits, browser
       <Label>
         cssLocks equation
         <Field name="equation" component="select">
-          <option value="pxEverywhere">pixels everywhere! 🕺</option>
+          <option value="pxEverywhere">pixels everywhere! 💩</option>
+          <option value="remFontSize">rem font size 🕺</option>
         </Field>
       </Label>
       <Label>
